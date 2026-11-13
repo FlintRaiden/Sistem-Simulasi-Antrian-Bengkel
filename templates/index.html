@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulasi Antrian Bengkel (DES)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="min-h-screen">
+  <header class="bar">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <h1 class="title">Simulasi Antrian Bengkel</h1>
+        <p class="text-sm opacity-80">Discrete-Event Simulation: 1 resepsionis/kasir, 2 montir</p>
+      </div>
+      <span class="badge-src" title="Sumber engine simulasi">Engine: {{ 'file .joblib' if source == 'joblib' else 'simulation/engine.py (fallback)' }}</span>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 grid gap-6 lg:grid-cols-[340px_1fr]">
+    <!-- PANEL INPUT -->
+    <aside class="panel self-start">
+      <h2 class="h2">Data masukan</h2>
+      <div class="tabs" role="tablist">
+        <button id="tab-random" class="tab active" type="button" role="tab">Acak (distribusi)</button>
+        <button id="tab-manual" class="tab" type="button" role="tab">Manual (custom)</button>
+      </div>
+
+      <div id="form-random" class="space-y-3">
+        <label class="fld">Jumlah mobil<input id="n_cars" type="number" min="1" max="500"></label>
+        <label class="fld">Rata-rata antar-kedatangan (menit, eksponensial)<input id="mean_interarrival" type="number" step="0.1" min="0.1"></label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="fld">Pendaftaran: rata-rata<input id="reg_mean" type="number" step="0.1"></label>
+          <label class="fld">Pendaftaran: std dev<input id="reg_std" type="number" step="0.1"></label>
+          <label class="fld">Perbaikan: rata-rata<input id="service_mean" type="number" step="0.1"></label>
+          <label class="fld">Perbaikan: std dev<input id="service_std" type="number" step="0.1"></label>
+          <label class="fld">Pembayaran: rata-rata<input id="pay_mean" type="number" step="0.1"></label>
+          <label class="fld">Pembayaran: std dev<input id="pay_std" type="number" step="0.1"></label>
+        </div>
+        <label class="fld">Random seed<input id="seed" type="number" step="1"></label>
+      </div>
+
+      <div id="form-manual" class="space-y-3 hidden">
+        <p class="hint">Pisahkan angka dengan koma. Satu angka pada pendaftaran/pembayaran berlaku untuk semua mobil.</p>
+        <label class="fld">Waktu kedatangan<textarea id="arrivals" rows="2">0, 3, 5, 8</textarea></label>
+        <label class="fld">Waktu pendaftaran<textarea id="reg" rows="1">1</textarea></label>
+        <label class="fld">Waktu perbaikan<textarea id="service" rows="2">10, 12, 8, 15</textarea></label>
+        <label class="fld">Waktu pembayaran<textarea id="pay" rows="1">1</textarea></label>
+      </div>
+
+      <label class="fld mt-3">Disiplin antrian
+        <select id="discipline">
+          <option value="FIFO">FIFO (First-In, First-Out)</option>
+          <option value="LIFO">LIFO (Last-In, First-Out)</option>
+          <option value="RANDOM">RANDOM (SIRO)</option>
+        </select>
+      </label>
+      <button id="btn-run" type="button" class="btn-primary mt-4 w-full">Jalankan simulasi</button>
+      <p id="error" class="error hidden" role="alert"></p>
+    </aside>
+
+    <!-- HASIL -->
+    <section class="space-y-6 min-w-0">
+      <!-- VISUALISASI -->
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="h2 !mb-0">Alur bengkel</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-next" class="btn" type="button" disabled>Next event</button>
+            <button id="btn-play" class="btn" type="button" disabled>Auto play</button>
+            <select id="speed" class="btn" aria-label="Kecepatan auto play">
+              <option value="1200">Lambat</option><option value="600" selected>Sedang</option><option value="200">Cepat</option>
+            </select>
+            <button id="btn-reset" class="btn" type="button" disabled>Reset</button>
+          </div>
+        </div>
+        <div class="clockbar">
+          <div>Clock <strong id="v-clock" class="mono">0</strong> menit</div>
+          <div>Event <strong id="v-event" class="mono">-</strong></div>
+          <div>Langkah <strong id="v-step" class="mono">0 / 0</strong></div>
+          <div>Selesai <strong id="v-done" class="mono">0</strong></div>
+        </div>
+        <p id="v-detail" class="text-sm mt-2 min-h-[1.25rem]">Jalankan simulasi, lalu tekan Next event atau Auto play.</p>
+
+        <div class="flow mt-4">
+          <div class="node"><h3>Antrian resepsionis</h3><div id="n-reg" class="chips"></div></div>
+          <div class="arrow" aria-hidden="true">&rarr;</div>
+          <div class="node"><h3>Resepsionis / kasir</h3><div id="n-recep" class="status"></div></div>
+          <div class="arrow" aria-hidden="true">&rarr;</div>
+          <div class="node"><h3>Ruang tunggu bengkel</h3><div id="n-wait" class="chips"></div></div>
+          <div class="arrow" aria-hidden="true">&rarr;</div>
+          <div class="node stack">
+            <div><h3>Montir 1</h3><div id="n-m1" class="status"></div></div>
+            <div><h3>Montir 2</h3><div id="n-m2" class="status"></div></div>
+          </div>
+          <div class="arrow" aria-hidden="true">&rarr;</div>
+          <div class="node"><h3>Antrian kasir</h3><div id="n-pay" class="chips"></div></div>
+          <div class="arrow" aria-hidden="true">&rarr;</div>
+          <div class="node"><h3>Selesai</h3><div id="n-done" class="big mono">0</div></div>
+        </div>
+      </div>
+
+      <!-- STATISTIK -->
+      <div id="cards" class="grid gap-3 grid-cols-2 md:grid-cols-4"></div>
+
+      <!-- GRAFIK -->
+      <div class="panel">
+        <h2 class="h2">Panjang antrian terhadap Clock</h2>
+        <div class="h-64"><canvas id="chart"></canvas></div>
+      </div>
+
+      <!-- TABEL -->
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h2 class="h2 !mb-0">Tabel log kejadian (DES table)</h2>
+          <button id="btn-csv" class="btn" type="button" disabled>Export ke CSV</button>
+        </div>
+        <div class="tablewrap" id="tablewrap">
+          <table id="log-table">
+            <thead><tr>
+              <th>No</th><th>Clock (menit)</th><th>Event type</th><th>ID mobil</th><th>Detail aktivitas</th>
+              <th>Isi antrian tunggu</th><th>Status montir 1</th><th>Status montir 2</th>
+              <th>Status resepsionis/kasir</th><th>Waktu tunggu mobil</th>
+            </tr></thead>
+            <tbody id="log-body"><tr><td colspan="10" class="empty">Belum ada simulasi. Isi data masukan lalu pilih Jalankan simulasi.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>window.DEFAULTS = {{ defaults | tojson }};</script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

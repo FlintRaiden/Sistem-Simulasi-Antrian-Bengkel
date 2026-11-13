@@ -1,0 +1,52 @@
+:root{
+  --ground:#E8EAEB; --panel:#F7F8F8; --ink:#16232B; --muted:#5B6B73; --line:#C9CFD2;
+  --blue:#1D4E89; --idle:#2F7D57; --busy:#C77700; --hi:#FFF3B0;
+}
+body{background:var(--ground);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono,table td,table th{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.bar{background:var(--ink);color:#fff;border-bottom:6px solid #F2C500}
+.title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:2rem;line-height:1.1;letter-spacing:.01em}
+.badge-src{font-size:.75rem;border:1px solid rgba(255,255,255,.4);padding:.2rem .6rem;border-radius:4px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1.1rem}
+.h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.35rem;margin-bottom:.8rem}
+.hint{font-size:.8rem;color:var(--muted)}
+.fld{display:block;font-size:.8rem;color:var(--muted);font-weight:500}
+.fld input,.fld select,.fld textarea{display:block;width:100%;margin-top:.25rem;padding:.45rem .6rem;border:1px solid var(--line);
+  border-radius:4px;background:#fff;color:var(--ink);font-size:.9rem;font-family:'IBM Plex Mono',monospace}
+.tabs{display:flex;margin-bottom:1rem;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.tab{flex:1;padding:.5rem;font-size:.85rem;background:#fff;color:var(--muted);font-weight:500}
+.tab.active{background:var(--blue);color:#fff}
+.btn,.btn-primary{padding:.45rem .9rem;border-radius:4px;font-size:.85rem;font-weight:600;border:1px solid var(--blue);color:var(--blue);background:#fff;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff;padding:.65rem 1rem;font-size:.95rem}
+.btn:hover:not(:disabled){background:#EAF1F9}.btn-primary:hover{background:#163F70}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid #F2C500;outline-offset:2px}
+.error{margin-top:.75rem;font-size:.85rem;color:#8A1C1C;background:#FBE9E9;border:1px solid #E5B3B3;padding:.5rem .7rem;border-radius:4px}
+.clockbar{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;font-size:.85rem;color:var(--muted)}
+.clockbar strong{color:var(--ink);font-size:1rem}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:.5rem}
+.node{flex:1 1 130px;min-width:130px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:.6rem}
+.node.stack{display:flex;flex-direction:column;gap:.6rem}
+.node h3{font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:.4rem}
+.arrow{align-self:center;color:var(--muted);font-size:1.2rem}
+.chips{display:flex;flex-wrap:wrap;gap:.3rem;min-height:1.8rem}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:.75rem;background:var(--blue);color:#fff;padding:.15rem .45rem;border-radius:3px}
+.chip.cur{background:#F2C500;color:var(--ink);font-weight:600}
+.empty-q{font-size:.75rem;color:var(--muted)}
+.status{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:500;padding:.35rem .5rem;border-radius:4px;border:1px solid}
+.status.idle{color:var(--idle);border-color:var(--idle);background:#EAF5EF}
+.status.busy{color:#7A4700;border-color:var(--busy);background:#FFF1D6}
+.big{font-size:2rem;font-weight:500}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.8rem}
+.card .lab{font-size:.75rem;color:var(--muted)}
+.card .val{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:500;margin-top:.15rem}
+.card .unit{font-size:.75rem;color:var(--muted);margin-left:.2rem}
+.tablewrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:4px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}
+th{position:sticky;top:0;background:var(--ink);color:#fff;text-align:left;padding:.45rem .6rem;font-weight:500}
+td{padding:.35rem .6rem;border-bottom:1px solid #E4E8EA}
+tr.future{opacity:.38}
+tr.current td{background:var(--hi);font-weight:500}
+td.empty{text-align:center;color:var(--muted);padding:1.5rem;font-family:'IBM Plex Sans',sans-serif}
+@media (prefers-reduced-motion:no-preference){.chip,.status{transition:background .2s,color .2s}}
+@media (max-width:640px){.arrow{display:none}.title{font-size:1.6rem}}
